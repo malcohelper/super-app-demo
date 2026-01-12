@@ -178,7 +178,7 @@ HostApp/
 
 ```bash
 # Clone repository
-cd /path/to/super-app-demo/HostApp
+cd /path/to/super-app-demo
 
 # Install dependencies
 npm install
@@ -330,7 +330,7 @@ export default function MiniApp(props: MiniAppProps) {
 
 ### Configuration
 
-File: [rspack.config.mjs](file:///Users/malco/Documents/super-app-demo/HostApp/rspack.config.mjs)
+File: [rspack.config.mjs](file:///Users/malco/Documents/super-app-demo/rspack.config.mjs)
 
 ```javascript
 new Repack.plugins.ModuleFederationPlugin({
@@ -349,7 +349,7 @@ new Repack.plugins.ModuleFederationPlugin({
 
 ### Remote Configuration
 
-File: [src/federation/remotes.config.ts](file:///Users/malco/Documents/super-app-demo/HostApp/src/federation/remotes.config.ts)
+File: [src/federation/remotes.config.ts](file:///Users/malco/Documents/super-app-demo/src/federation/remotes.config.ts)
 
 ```typescript
 export const REMOTES = {

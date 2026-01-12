@@ -36,7 +36,7 @@ pod --version
 
 ```bash
 # Clone repository
-cd HostApp
+cd /Users/malco/Documents/super-app-demo
 
 # Install dependencies
 npm install
