@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -8,44 +8,47 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ScrollView,
-} from 'react-native';
-import { useAuth } from '../auth/AuthContext';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+} from "react-native";
+import { useForm, Controller } from "react-hook-form";
+import { useAuth } from "../auth/AuthContext";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
-type Props = NativeStackScreenProps<any, 'Register'>;
+type Props = NativeStackScreenProps<any, "Register">;
+
+interface RegisterFormData {
+  displayName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
 export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const { register } = useAuth();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<RegisterFormData>({
+    defaultValues: {
+      displayName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
+  const password = watch("password");
 
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
-      return;
-    }
-
+  const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      await register(name, email, password);
-      // Navigation handled by App.tsx based on auth state
+      await register(data.displayName, data.email, data.password);
     } catch (error) {
-      Alert.alert('Registration Failed', 'Please try again');
+      console.error("Register error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -54,7 +57,7 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -65,46 +68,132 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.subtitle}>Join Super App today</Text>
 
           <View style={styles.form}>
-            <TextInput
-              style={styles.input}
-              placeholder="Full Name"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-              editable={!isLoading}
+            <Controller
+              control={control}
+              name="displayName"
+              rules={{
+                required: "Display name is required",
+                minLength: {
+                  value: 2,
+                  message: "Name must be at least 2 characters",
+                },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      errors.displayName && styles.inputError,
+                    ]}
+                    placeholder="Full Name"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="words"
+                    editable={!isLoading}
+                  />
+                  {errors.displayName && (
+                    <Text style={styles.errorText}>
+                      {errors.displayName.message}
+                    </Text>
+                  )}
+                </>
+              )}
             />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              editable={!isLoading}
+            <Controller
+              control={control}
+              name="email"
+              rules={{
+                required: "Email is required",
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: "Invalid email format",
+                },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <>
+                  <TextInput
+                    style={[styles.input, errors.email && styles.inputError]}
+                    placeholder="Email"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    editable={!isLoading}
+                  />
+                  {errors.email && (
+                    <Text style={styles.errorText}>{errors.email.message}</Text>
+                  )}
+                </>
+              )}
             />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Password (min 6 characters)"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!isLoading}
+            <Controller
+              control={control}
+              name="password"
+              rules={{
+                required: "Password is required",
+                minLength: {
+                  value: 6,
+                  message: "Password must be at least 6 characters",
+                },
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <>
+                  <TextInput
+                    style={[styles.input, errors.password && styles.inputError]}
+                    placeholder="Password (min 6 characters)"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    secureTextEntry
+                    editable={!isLoading}
+                  />
+                  {errors.password && (
+                    <Text style={styles.errorText}>
+                      {errors.password.message}
+                    </Text>
+                  )}
+                </>
+              )}
             />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              editable={!isLoading}
+            <Controller
+              control={control}
+              name="confirmPassword"
+              rules={{
+                required: "Please confirm your password",
+                validate: (value) =>
+                  value === password || "Passwords do not match",
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      errors.confirmPassword && styles.inputError,
+                    ]}
+                    placeholder="Confirm Password"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    secureTextEntry
+                    editable={!isLoading}
+                  />
+                  {errors.confirmPassword && (
+                    <Text style={styles.errorText}>
+                      {errors.confirmPassword.message}
+                    </Text>
+                  )}
+                </>
+              )}
             />
 
             <TouchableOpacity
               style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleRegister}
+              onPress={handleSubmit(onSubmit)}
               disabled={isLoading}
             >
               {isLoading ? (
@@ -116,18 +205,15 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
             <TouchableOpacity
               style={styles.linkButton}
-              onPress={() => navigation.navigate('Login')}
+              onPress={() => navigation.navigate("Login")}
               disabled={isLoading}
             >
               <Text style={styles.linkText}>
-                Already have an account? <Text style={styles.linkTextBold}>Sign In</Text>
+                Already have an account?{" "}
+                <Text style={styles.linkTextBold}>Sign In</Text>
               </Text>
             </TouchableOpacity>
           </View>
-
-          <Text style={styles.demoNote}>
-            Demo: Registration creates a dummy account
-          </Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -137,72 +223,76 @@ export const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   scrollContent: {
     flexGrow: 1,
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 20,
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginBottom: 40,
   },
   form: {
     marginBottom: 20,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 16,
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 4,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
+  },
+  inputError: {
+    borderColor: "#FF6B6B",
+    borderWidth: 2,
+  },
+  errorText: {
+    color: "#FF6B6B",
+    fontSize: 12,
+    marginBottom: 12,
+    marginLeft: 4,
   },
   button: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     borderRadius: 8,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   linkButton: {
     marginTop: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   linkText: {
-    color: '#666',
+    color: "#666",
     fontSize: 14,
   },
   linkTextBold: {
-    color: '#007AFF',
-    fontWeight: '600',
-  },
-  demoNote: {
-    textAlign: 'center',
-    color: '#999',
-    fontSize: 12,
-    fontStyle: 'italic',
+    color: "#007AFF",
+    fontWeight: "600",
   },
 });

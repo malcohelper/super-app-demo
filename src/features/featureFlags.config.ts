@@ -5,7 +5,7 @@
 
 export interface FeatureFlags {
   // Mini App Feature Flags
-  MINI_APP_USER_MANAGEMENT: boolean;
+  CHAT_APP: boolean;
   MINI_APP_A: boolean;
   MINI_APP_B: boolean;
 
@@ -13,7 +13,7 @@ export interface FeatureFlags {
   DARK_MODE: boolean;
   ANALYTICS: boolean;
   PUSH_NOTIFICATIONS: boolean;
-  
+
   // Experimental Features
   BETA_FEATURES: boolean;
 }
@@ -24,7 +24,7 @@ export interface FeatureFlags {
  */
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   // Mini Apps
-  MINI_APP_USER_MANAGEMENT: true,
+  CHAT_APP: true,
   MINI_APP_A: true,
   MINI_APP_B: true,
 
@@ -32,7 +32,7 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   DARK_MODE: true,
   ANALYTICS: true,
   PUSH_NOTIFICATIONS: false,
-  
+
   // Experimental
   BETA_FEATURES: false,
 };
@@ -41,7 +41,7 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
  * Map Mini App names to their feature flag keys
  */
 export const MINI_APP_FEATURE_FLAGS: Record<string, keyof FeatureFlags> = {
-  UserManagementApp: 'MINI_APP_USER_MANAGEMENT',
-  miniAppA: 'MINI_APP_A',
-  miniAppB: 'MINI_APP_B',
+  chatApp: "CHAT_APP",
+  miniAppA: "MINI_APP_A",
+  miniAppB: "MINI_APP_B",
 };

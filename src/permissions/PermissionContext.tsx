@@ -1,21 +1,29 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useAuth } from '../auth/AuthContext';
+import React, { createContext, useContext, ReactNode } from "react";
+import { useAuth } from "../auth/AuthContext";
 
 interface PermissionContextType {
   hasPermission: (permission: string) => boolean;
   hasRole: (role: string) => boolean;
   hasAnyPermission: (permissions: string[]) => boolean;
   hasAllPermissions: (permissions: string[]) => boolean;
-  canAccessMiniApp: (appName: string, requiredPermissions?: string[], requiredRole?: string) => boolean;
+  canAccessMiniApp: (
+    appName: string,
+    requiredPermissions?: string[],
+    requiredRole?: string
+  ) => boolean;
 }
 
-const PermissionContext = createContext<PermissionContextType | undefined>(undefined);
+const PermissionContext = createContext<PermissionContextType | undefined>(
+  undefined
+);
 
-export const PermissionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const PermissionProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const { userInfo } = useAuth();
 
   const hasPermission = (permission: string): boolean => {
-    if (!userInfo) return false;
+    if (!userInfo || !userInfo.permissions) return false;
     return userInfo.permissions.includes(permission);
   };
 
@@ -25,13 +33,17 @@ export const PermissionProvider: React.FC<{ children: ReactNode }> = ({ children
   };
 
   const hasAnyPermission = (permissions: string[]): boolean => {
-    if (!userInfo) return false;
-    return permissions.some(permission => userInfo.permissions.includes(permission));
+    if (!userInfo || !userInfo.permissions) return false;
+    return permissions.some((permission) =>
+      userInfo.permissions.includes(permission)
+    );
   };
 
   const hasAllPermissions = (permissions: string[]): boolean => {
-    if (!userInfo) return false;
-    return permissions.every(permission => userInfo.permissions.includes(permission));
+    if (!userInfo || !userInfo.permissions) return false;
+    return permissions.every((permission) =>
+      userInfo.permissions.includes(permission)
+    );
   };
 
   const canAccessMiniApp = (
@@ -41,8 +53,8 @@ export const PermissionProvider: React.FC<{ children: ReactNode }> = ({ children
   ): boolean => {
     if (!userInfo) return false;
 
-    // Admin can access everything
-    if (userInfo.role === 'admin') return true;
+    // // Admin can access everything
+    // if (userInfo.role === "admin") return true;
 
     // Check role requirement
     if (requiredRole && userInfo.role !== requiredRole) {
@@ -76,7 +88,7 @@ export const PermissionProvider: React.FC<{ children: ReactNode }> = ({ children
 export const usePermissions = () => {
   const context = useContext(PermissionContext);
   if (context === undefined) {
-    throw new Error('usePermissions must be used within a PermissionProvider');
+    throw new Error("usePermissions must be used within a PermissionProvider");
   }
   return context;
 };

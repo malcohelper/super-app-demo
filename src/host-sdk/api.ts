@@ -1,4 +1,4 @@
-import type { ApiResponse } from './types';
+import type { ApiResponse } from "./types";
 
 /**
  * API Utilities for Mini Apps
@@ -9,7 +9,10 @@ class ApiClient {
   private baseURL: string;
   private token: string;
 
-  constructor(baseURL: string = 'https://api.superapp.com', token: string = '') {
+  constructor(
+    baseURL: string = "https://super-app-case.web.app/api",
+    token: string = ""
+  ) {
     this.baseURL = baseURL;
     this.token = token;
   }
@@ -20,7 +23,7 @@ class ApiClient {
 
   private getHeaders(): HeadersInit {
     return {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(this.token && { Authorization: `Bearer ${this.token}` }),
     };
   }
@@ -28,7 +31,7 @@ class ApiClient {
   async get<T = any>(endpoint: string): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
-        method: 'GET',
+        method: "GET",
         headers: this.getHeaders(),
       });
 
@@ -37,7 +40,7 @@ class ApiClient {
       if (!response.ok) {
         return {
           success: false,
-          error: data.message || 'Request failed',
+          error: data.message || "Request failed",
         };
       }
 
@@ -46,10 +49,10 @@ class ApiClient {
         data,
       };
     } catch (error) {
-      console.error('[API] GET Error:', error);
+      console.error("[API] GET Error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -57,7 +60,7 @@ class ApiClient {
   async post<T = any>(endpoint: string, body: any): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getHeaders(),
         body: JSON.stringify(body),
       });
@@ -67,7 +70,7 @@ class ApiClient {
       if (!response.ok) {
         return {
           success: false,
-          error: data.message || 'Request failed',
+          error: data.message || "Request failed",
         };
       }
 
@@ -76,10 +79,10 @@ class ApiClient {
         data,
       };
     } catch (error) {
-      console.error('[API] POST Error:', error);
+      console.error("[API] POST Error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -87,7 +90,7 @@ class ApiClient {
   async put<T = any>(endpoint: string, body: any): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: this.getHeaders(),
         body: JSON.stringify(body),
       });
@@ -97,7 +100,7 @@ class ApiClient {
       if (!response.ok) {
         return {
           success: false,
-          error: data.message || 'Request failed',
+          error: data.message || "Request failed",
         };
       }
 
@@ -106,10 +109,10 @@ class ApiClient {
         data,
       };
     } catch (error) {
-      console.error('[API] PUT Error:', error);
+      console.error("[API] PUT Error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -117,7 +120,7 @@ class ApiClient {
   async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: this.getHeaders(),
       });
 
@@ -126,7 +129,7 @@ class ApiClient {
       if (!response.ok) {
         return {
           success: false,
-          error: data.message || 'Request failed',
+          error: data.message || "Request failed",
         };
       }
 
@@ -135,10 +138,10 @@ class ApiClient {
         data,
       };
     } catch (error) {
-      console.error('[API] DELETE Error:', error);
+      console.error("[API] DELETE Error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }

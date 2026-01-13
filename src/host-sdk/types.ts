@@ -8,11 +8,11 @@ export interface MiniAppProps {
   userInfo: {
     id: string;
     name: string;
-    role: 'admin' | 'user' | 'guest';
+    role: "admin" | "user" | "guest";
     permissions: string[];
   };
-  theme: 'light' | 'dark';
-  language: 'vi' | 'en';
+  theme: "light" | "dark";
+  language: "vi" | "en";
   // Lifecycle callbacks
   onFocus?: () => void;
   onBlur?: () => void;
@@ -23,6 +23,7 @@ export interface MiniAppProps {
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
+  message?: string;
   error?: string;
 }
 

@@ -1,15 +1,18 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { generateDummyToken, isTokenExpired, decodeDummyToken } from './tokenUtils';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { isTokenExpired } from "./tokenUtils";
 
 /**
  * Token Refresh Service
  * Handles automatic token refresh before expiration
+ *
+ * NOTE: This service needs to be updated to work with backend API
+ * Currently using dummy implementation
  */
 
 const STORAGE_KEYS = {
-  TOKEN: '@super_app_token',
-  REFRESH_TOKEN: '@super_app_refresh_token',
-  USER_INFO: '@super_app_user_info',
+  TOKEN: "@super_app_token",
+  REFRESH_TOKEN: "@super_app_refresh_token",
+  USER_INFO: "@super_app_user_info",
 };
 
 // Refresh token 5 minutes before expiration
@@ -66,7 +69,7 @@ export class TokenRefreshService {
         this.refreshToken();
       }
     } catch (error) {
-      console.error('[TokenRefreshService] Error scheduling refresh:', error);
+      console.error("[TokenRefreshService] Error scheduling refresh:", error);
     }
   }
 
@@ -75,7 +78,7 @@ export class TokenRefreshService {
    */
   private async refreshToken() {
     try {
-      console.log('[TokenRefreshService] Refreshing token...');
+      console.log("[TokenRefreshService] Refreshing token...");
 
       const [token, userInfoStr] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.TOKEN),
@@ -83,12 +86,12 @@ export class TokenRefreshService {
       ]);
 
       if (!token || !userInfoStr) {
-        throw new Error('No token or user info found');
+        throw new Error("No token or user info found");
       }
 
       const payload = decodeDummyToken(token);
       if (!payload) {
-        throw new Error('Invalid token');
+        throw new Error("Invalid token");
       }
 
       const userInfo = JSON.parse(userInfoStr);
@@ -105,7 +108,7 @@ export class TokenRefreshService {
       // Save new token
       await AsyncStorage.setItem(STORAGE_KEYS.TOKEN, newToken);
 
-      console.log('[TokenRefreshService] Token refreshed successfully');
+      console.log("[TokenRefreshService] Token refreshed successfully");
 
       // Notify callback
       if (this.onTokenRefreshed) {
@@ -115,8 +118,8 @@ export class TokenRefreshService {
       // Schedule next refresh
       this.scheduleNextRefresh();
     } catch (error) {
-      console.error('[TokenRefreshService] Token refresh failed:', error);
-      
+      console.error("[TokenRefreshService] Token refresh failed:", error);
+
       // Notify failure callback
       if (this.onRefreshFailed) {
         this.onRefreshFailed();

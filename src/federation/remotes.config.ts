@@ -7,7 +7,7 @@ export interface RemoteConfig {
   dev: string;
   prod: string;
   requiredPermissions?: string[];
-  requiredRole?: 'admin' | 'user' | 'guest';
+  requiredRole?: "admin" | "user" | "guest";
   featureFlag?: string;
 }
 
@@ -16,23 +16,23 @@ export interface RemotesConfig {
 }
 
 export const REMOTES: RemotesConfig = {
+  ChatApp: {
+    dev: "http://localhost:8082/chatApp.container.bundle",
+    prod: "https://your-cdn.com/ChatApp/ios/chatApp.container.bundle",
+    requiredPermissions: ["chat"],
+    featureFlag: "CHAT_APP",
+  },
   miniAppA: {
-    dev: 'http://localhost:9001/miniAppA.container.bundle',
-    prod: 'https://cdn.superapp.com/mini-apps/app-a/latest/miniAppA.container.bundle',
-    requiredPermissions: ['miniapp.access.basic'],
-    featureFlag: 'MINI_APP_A',
+    dev: "http://localhost:9001/miniAppA.container.bundle",
+    prod: "https://cdn.superapp.com/mini-apps/app-a/latest/miniAppA.container.bundle",
+    requiredPermissions: ["miniapp.access.basic"],
+    featureFlag: "MINI_APP_A",
   },
   miniAppB: {
-    dev: 'http://localhost:9002/miniAppB.container.bundle',
-    prod: 'https://cdn.superapp.com/mini-apps/app-b/latest/miniAppB.container.bundle',
-    requiredPermissions: ['miniapp.access.basic'],
-    featureFlag: 'MINI_APP_B',
-  },
-  UserManagementApp: {
-    dev: 'http://127.0.0.1:8082/userManagement.container.bundle',
-    prod: 'https://malcohelper.github.io/super-app-bundles/UserManagementApp/ios/userManagement.container.bundle',
-    requiredPermissions: ['user.read'],
-    featureFlag: 'MINI_APP_USER_MANAGEMENT',
+    dev: "http://localhost:9002/miniAppB.container.bundle",
+    prod: "https://cdn.superapp.com/mini-apps/app-b/latest/miniAppB.container.bundle",
+    requiredPermissions: ["miniapp.access.basic"],
+    featureFlag: "MINI_APP_B",
   },
 };
 

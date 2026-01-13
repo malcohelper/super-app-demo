@@ -1,6 +1,6 @@
-import { Platform } from 'react-native';
-import { ScriptManager } from '@callstack/repack/client';
-import { getMiniAppUrl, REMOTES } from './remotes.config';
+import { Platform } from "react-native";
+import { ScriptManager } from "@callstack/repack/client";
+import { getMiniAppUrl, REMOTES } from "./remotes.config";
 
 /**
  * Script Manager for Dynamic Module Federation
@@ -15,7 +15,7 @@ ScriptManager.shared.addResolver(async (scriptId, caller) => {
   if (!caller && REMOTES[scriptId]) {
     try {
       const url = getMiniAppUrl(scriptId, isDev);
-      
+
       return {
         url,
         cache: !isDev,
@@ -23,7 +23,7 @@ ScriptManager.shared.addResolver(async (scriptId, caller) => {
           platform: Platform.OS,
           ...(isDev && { t: Date.now().toString() }),
         },
-        verifyScriptSignature: 'off',
+        verifyScriptSignature: "off",
       };
     } catch (error) {
       console.error(`[ScriptManager] Failed to resolve ${scriptId}:`, error);
@@ -37,7 +37,7 @@ ScriptManager.shared.addResolver(async (scriptId, caller) => {
       const baseUrl = getMiniAppUrl(caller, isDev);
       // Construct chunk URL relative to container URL
       const chunkUrl = baseUrl.replace(/[^/]+$/, `${scriptId}.chunk.bundle`);
-      
+
       return {
         url: chunkUrl,
         cache: !isDev,
@@ -45,11 +45,14 @@ ScriptManager.shared.addResolver(async (scriptId, caller) => {
           platform: Platform.OS,
           ...(isDev && { t: Date.now().toString() }),
         },
-        verifyScriptSignature: 'off',
+        verifyScriptSignature: "off",
       };
     } catch (error) {
-       console.error(`[ScriptManager] Failed to resolve chunk ${scriptId} for ${caller}:`, error);
-       throw error;
+      console.error(
+        `[ScriptManager] Failed to resolve chunk ${scriptId} for ${caller}:`,
+        error
+      );
+      throw error;
     }
   }
 

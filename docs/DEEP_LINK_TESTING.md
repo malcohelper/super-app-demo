@@ -1,12 +1,40 @@
 # Deep Link Testing Guide
 
+## 🎯 How Deep Links Work
+
+### Scenario 1: App Đang Mở (Foreground)
+
+- Deep link được xử lý ngay lập tức
+- Listener `Linking.addEventListener('url')` bắt sự kiện
+- Navigate trực tiếp đến screen tương ứng
+
+### Scenario 2: App Bị Kill (Killed/Not Running)
+
+- Deep link được lưu trong `Linking.getInitialURL()`
+- **Nếu chưa login:**
+  - Lưu deep link vào `pendingDeepLink`
+  - Hiển thị màn hình Login
+  - Sau khi login thành công → tự động navigate đến deep link đã lưu
+- **Nếu đã login (có token trong AsyncStorage):**
+  - Load token và user info
+  - Navigate trực tiếp đến deep link
+
+### Scenario 3: App Ở Background
+
+- Tương tự Scenario 1 (Foreground)
+- Listener vẫn hoạt động
+
+---
+
 ## ✅ Đã Cấu Hình
 
 ### iOS
+
 - ✅ Đã thêm `CFBundleURLTypes` vào `Info.plist`
 - ✅ URL Scheme: `superapp://`
 
 ### Android
+
 - ✅ Đã thêm intent filter vào `AndroidManifest.xml`
 - ✅ URL Scheme: `superapp://`
 
@@ -17,6 +45,7 @@
 ### Bước 1: Rebuild App
 
 **iOS:**
+
 ```bash
 cd ios
 rm -rf build
@@ -26,6 +55,7 @@ npm run ios
 ```
 
 **Android:**
+
 ```bash
 cd android
 ./gradlew clean
@@ -50,6 +80,7 @@ npm run android
 #### Option 2: Test Thủ Công
 
 **iOS:**
+
 ```bash
 # Test từng URL
 xcrun simctl openurl booted "superapp://mini-app/UserManagementApp"
@@ -58,6 +89,7 @@ xcrun simctl openurl booted "superapp://login"
 ```
 
 **Android:**
+
 ```bash
 # Test từng URL
 adb shell am start -a android.intent.action.VIEW -d "superapp://mini-app/UserManagementApp"
@@ -70,6 +102,7 @@ adb shell am start -a android.intent.action.VIEW -d "superapp://login"
 ## 📋 Test Scenarios
 
 ### Scenario 1: Open Mini App (Logged In)
+
 ```bash
 # iOS
 xcrun simctl openurl booted "superapp://mini-app/UserManagementApp"
@@ -79,37 +112,58 @@ adb shell am start -a android.intent.action.VIEW -d "superapp://mini-app/UserMan
 ```
 
 **Expected Result:**
+
 - ✅ App opens
 - ✅ Navigate directly to UserManagementApp screen
 - ✅ Mini App loads with user data
 
 ### Scenario 2: Open Mini App (Not Logged In)
+
 ```bash
-# Logout first in the app, then:
+# 1. Logout trong app (hoặc xóa app data)
+# 2. Kill app hẳn (swipe up từ app switcher)
+# 3. Trigger deep link:
+
+# iOS
 xcrun simctl openurl booted "superapp://mini-app/UserManagementApp"
+
+# Android
+adb shell am start -a android.intent.action.VIEW -d "superapp://mini-app/UserManagementApp"
 ```
 
 **Expected Result:**
-- ✅ App opens
-- ✅ Shows Login screen
-- ✅ After login → automatically navigate to UserManagementApp
+
+- ✅ App opens và hiển thị Login screen
+- ✅ Deep link được lưu vào `pendingDeepLink`
+- ✅ Sau khi login → tự động navigate đến UserManagementApp
+- ✅ Mini App loads với token mới từ API
+
+**Lưu ý quan trọng:**
+
+- Token phải được lưu vào AsyncStorage khi login thành công
+- AuthContext sẽ tự động load token khi app khởi động
+- Nếu token hết hạn (>1 giờ), app sẽ logout và yêu cầu login lại
 
 ### Scenario 3: Navigate to Home
+
 ```bash
 xcrun simctl openurl booted "superapp://home"
 ```
 
 **Expected Result:**
+
 - ✅ App opens
 - ✅ Navigate to Home screen
 - ✅ Shows list of Mini Apps
 
 ### Scenario 4: Open Login Screen
+
 ```bash
 xcrun simctl openurl booted "superapp://login"
 ```
 
 **Expected Result:**
+
 - ✅ App opens
 - ✅ Shows Login screen
 
@@ -118,12 +172,14 @@ xcrun simctl openurl booted "superapp://login"
 ## 🔍 Verify Deep Link Setup
 
 ### iOS - Check URL Scheme Registration
+
 ```bash
 # View Info.plist
 cat ios/HostApp/Info.plist | grep -A 10 "CFBundleURLTypes"
 ```
 
 **Expected Output:**
+
 ```xml
 <key>CFBundleURLTypes</key>
 <array>
@@ -141,12 +197,14 @@ cat ios/HostApp/Info.plist | grep -A 10 "CFBundleURLTypes"
 ```
 
 ### Android - Check Intent Filter
+
 ```bash
 # View AndroidManifest.xml
 cat android/app/src/main/AndroidManifest.xml | grep -A 5 "intent-filter"
 ```
 
 **Expected Output:**
+
 ```xml
 <intent-filter>
     <action android:name="android.intent.action.VIEW" />
@@ -163,6 +221,7 @@ cat android/app/src/main/AndroidManifest.xml | grep -A 5 "intent-filter"
 ### Issue 1: "No app found to handle URL"
 
 **Solution:**
+
 ```bash
 # iOS - Rebuild
 npm run ios
@@ -171,24 +230,72 @@ npm run ios
 npm run android
 ```
 
-### Issue 2: Deep link opens but doesn't navigate
+### Issue 2: Deep link opens but doesn't navigate (App đang mở)
 
-**Check console logs:**
+**Cause:** Listener không handle navigation
+
+**Solution:**
+
+- Đã fix bằng cách thêm `handleDeepLink()` function trong RootNavigator
+- Function này parse URL và gọi `navigation.navigate()` trực tiếp
+
+**Check logs:**
+
 ```bash
-# Look for these logs:
-📱 Deep link received: superapp://mini-app/UserManagementApp
-[Navigation] Navigating to: MiniApp
+🔗 [Deep Link] Received URL in foreground: superapp://mini-app/UserManagementApp
+🔗 [Deep Link] Handling URL: superapp://mini-app/UserManagementApp { isAuthenticated: true }
+🔗 [Deep Link] Parsed path: mini-app/UserManagementApp
+🔗 [Deep Link] Navigating to MiniApp: UserManagementApp
 ```
 
-**Verify linking config:**
-```typescript
-// In RootNavigator.tsx
-<NavigationContainer ref={navigationRef} linking={linkingConfig}>
+### Issue 3: Kill app thì không load được mini app (No token)
+
+**Cause:** Khi kill app và trigger deep link, nếu chưa login thì không có token để call API
+
+**Solution:**
+
+1. **Khi chưa login:** Deep link được lưu vào `pendingDeepLink`
+2. **Sau khi login:** Tự động navigate đến pending deep link
+3. **Nếu đã login trước:** Token được load từ AsyncStorage, navigate trực tiếp
+
+**Check logs:**
+
+```bash
+# Khi chưa login:
+🔗 [Deep Link] Initial URL: superapp://mini-app/UserManagementApp
+🔗 [Deep Link] Not authenticated, saving pending URL
+
+# Sau khi login:
+🔗 [Deep Link] Auth state changed: { isAuthenticated: true }
+🔗 [Deep Link] Processing pending URL: superapp://mini-app/UserManagementApp
+🔗 [Deep Link] Handling pending URL
+🔗 [Deep Link] Navigating to MiniApp: UserManagementApp
 ```
 
-### Issue 3: App crashes on deep link
+**Verify AsyncStorage:**
+
+```bash
+# Check if token is saved
+# In React Native Debugger console:
+AsyncStorage.getItem('@super_app_token').then(console.log)
+AsyncStorage.getItem('@super_app_token_timestamp').then(console.log)
+AsyncStorage.getItem('@super_app_user_info').then(console.log)
+```
+
+### Issue 4: Token expired khi mở deep link
+
+**Cause:** Token có thời hạn 1 giờ, nếu quá 1 giờ thì bị expired
+
+**Solution:**
+
+- AuthContext tự động check `isTokenExpired()` khi load
+- Nếu expired → logout và yêu cầu login lại
+- Deep link được lưu và navigate sau khi login
+
+### Issue 5: Deep link opens but app crashes
 
 **Check:**
+
 1. Navigation routes are defined correctly
 2. Screen components exist
 3. No TypeScript errors
@@ -198,6 +305,7 @@ npm run android
 ## 📱 Test on Real Device
 
 ### iOS
+
 ```bash
 # List connected devices
 xcrun devicectl device info devices
@@ -209,6 +317,7 @@ xcrun simctl openurl <DEVICE_UDID> "superapp://mini-app/UserManagementApp"
 Or send link via Messages/Email and tap it.
 
 ### Android
+
 ```bash
 # Check connected devices
 adb devices
@@ -239,15 +348,85 @@ superapp://mini-app/miniAppB
 
 ## 📊 Test Checklist
 
-- [ ] iOS: Open app from deep link (app closed)
-- [ ] iOS: Navigate via deep link (app running)
-- [ ] iOS: Deep link when not logged in
-- [ ] Android: Open app from deep link (app closed)
-- [ ] Android: Navigate via deep link (app running)
-- [ ] Android: Deep link when not logged in
-- [ ] All routes work correctly
-- [ ] Pending deep link works after login
+- [ ] **App đang mở:** Deep link navigate ngay lập tức
+- [ ] **App đang mở:** Navigate đến mini app khác
+- [ ] **App bị kill + đã login:** Navigate trực tiếp (load token từ AsyncStorage)
+- [ ] **App bị kill + chưa login:** Hiển thị Login → sau login navigate đến mini app
+- [ ] **Token expired:** Logout tự động → Login → Navigate đến mini app
+- [ ] iOS: Test trên simulator
+- [ ] iOS: Test trên real device
+- [ ] Android: Test trên emulator
+- [ ] Android: Test trên real device
 - [ ] No crashes or errors
+- [ ] Mini app load với token và user info đúng
+
+---
+
+## 🔍 Debug Tips
+
+### 1. Check Deep Link Logs
+
+Tìm các logs này trong Metro Bundler:
+
+```
+🔗 [Deep Link] Setting up listeners...
+🔗 [Deep Link] Received URL in foreground: <url>
+🔗 [Deep Link] Handling URL: <url>
+🔗 [Deep Link] Navigating to MiniApp: <appName>
+```
+
+### 2. Check Auth State
+
+```typescript
+// In React Native Debugger
+console.log("Auth:", {
+  isAuthenticated,
+  isLoading,
+  userToken,
+  userInfo,
+});
+```
+
+### 3. Check AsyncStorage
+
+```typescript
+// Check saved token
+AsyncStorage.getItem("@super_app_token").then((token) => {
+  console.log("Token:", token);
+});
+
+// Check timestamp
+AsyncStorage.getItem("@super_app_token_timestamp").then((timestamp) => {
+  const age = Date.now() - parseInt(timestamp);
+  console.log("Token age (minutes):", age / 1000 / 60);
+});
+```
+
+### 4. Test Token Expiration
+
+```typescript
+// Manually expire token for testing
+AsyncStorage.setItem(
+  "@super_app_token_timestamp",
+  (Date.now() - 2 * 60 * 60 * 1000).toString() // 2 hours ago
+);
+```
+
+---
+
+## 📊 Test Checklist
+
+- [ ] **App đang mở:** Deep link navigate ngay lập tức
+- [ ] **App đang mở:** Navigate đến mini app khác
+- [ ] **App bị kill + đã login:** Navigate trực tiếp (load token từ AsyncStorage)
+- [ ] **App bị kill + chưa login:** Hiển thị Login → sau login navigate đến mini app
+- [ ] **Token expired:** Logout tự động → Login → Navigate đến mini app
+- [ ] iOS: Test trên simulator
+- [ ] iOS: Test trên real device
+- [ ] Android: Test trên emulator
+- [ ] Android: Test trên real device
+- [ ] No crashes or errors
+- [ ] Mini app load với token và user info đúng
 
 ---
 
@@ -261,6 +440,7 @@ superapp://mini-app/miniAppB
 ---
 
 **Quick Test Command:**
+
 ```bash
 # iOS
 xcrun simctl openurl booted "superapp://mini-app/UserManagementApp"
