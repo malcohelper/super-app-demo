@@ -5,9 +5,11 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
+import Toast from "react-native-toast-message";
 import { NativeAuthModule } from "./NativeAuthModule";
 import { SecureStorage } from "./SecureStorage";
 import { isTokenExpired } from "./tokenUtils";
+import { getAuthErrorMessage } from "./errors";
 import * as userApi from "./userApi";
 
 export interface UserInfo {
@@ -19,7 +21,7 @@ export interface UserInfo {
   permissions: string[];
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   userToken: string | null;
@@ -132,8 +134,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setIsAuthenticated(true);
       
       console.log('[AuthContext] ✓ Login successful');
-    } catch (error) {
-      console.error('[AuthContext] Login failed:', error);
+      
+
+    } catch (error: any) {
+      const errorMessage = getAuthErrorMessage(error);
+      console.error('[AuthContext] Login failed:', errorMessage, error);
+      
+      // Show error toast
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: errorMessage,
+        position: 'top',
+        visibilityTime: 4000,
+      });
+      
       throw error;
     }
   };
@@ -153,8 +168,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setIsAuthenticated(true);
       
       console.log('[AuthContext] ✓ Signup successful');
-    } catch (error) {
-      console.error('[AuthContext] Register failed:', error);
+      
+    } catch (error: any) {
+      const errorMessage = getAuthErrorMessage(error);
+      console.error('[AuthContext] Register failed:', errorMessage, error);
+      
+      // Show error toast
+      Toast.show({
+        type: 'error',
+        text1: 'Signup Failed',
+        text2: errorMessage,
+        position: 'top',
+        visibilityTime: 4000,
+      });
+      
       throw error;
     }
   };
@@ -171,8 +198,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setIsAuthenticated(false);
       
       console.log('[AuthContext] ✓ Logout successful');
-    } catch (error) {
-      console.error('[AuthContext] Logout failed:', error);
+      
+    } catch (error: any) {
+      const errorMessage = getAuthErrorMessage(error);
+      console.error('[AuthContext] Logout failed:', errorMessage, error);
+      
+      // Show error toast
+      Toast.show({
+        type: 'error',
+        text1: 'Logout Failed',
+        text2: errorMessage,
+        position: 'top',
+      });
+      
       // Still clear local state even if native logout fails
       await clearAuthState();
       setUserToken(null);

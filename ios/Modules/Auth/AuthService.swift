@@ -205,13 +205,13 @@ class AuthService {
 
 // MARK: - Auth Errors
 
-enum AuthError: Error {
+enum AuthError: Error, LocalizedError {
   case invalidURL
   case invalidResponse
   case apiError(message: String)
   case networkError(Error)
   
-  var localizedDescription: String {
+  var errorDescription: String? {
     switch self {
     case .invalidURL:
       return "Invalid API URL"
@@ -221,6 +221,19 @@ enum AuthError: Error {
       return message
     case .networkError(let error):
       return "Network error: \(error.localizedDescription)"
+    }
+  }
+  
+  var errorCode: String {
+    switch self {
+    case .invalidURL:
+      return "INVALID_URL"
+    case .invalidResponse:
+      return "INVALID_RESPONSE"
+    case .apiError:
+      return "API_ERROR"
+    case .networkError:
+      return "NETWORK_ERROR"
     }
   }
 }

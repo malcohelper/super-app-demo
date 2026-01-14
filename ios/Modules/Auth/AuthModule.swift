@@ -43,8 +43,12 @@ class AuthModule: RCTEventEmitter {
         }
         
         resolve(userInfo)
+      } catch let authError as AuthError {
+        let errorCode = authError.errorCode
+        let errorMessage = authError.errorDescription ?? "Login failed"
+        reject(errorCode, errorMessage, authError)
       } catch {
-        reject("LOGIN_ERROR", "Login failed: \(error.localizedDescription)", error)
+        reject("LOGIN_ERROR", error.localizedDescription, error)
       }
     }
   }
@@ -78,8 +82,12 @@ class AuthModule: RCTEventEmitter {
         }
         
         resolve(userInfo)
+      } catch let authError as AuthError {
+        let errorCode = authError.errorCode
+        let errorMessage = authError.errorDescription ?? "Signup failed"
+        reject(errorCode, errorMessage, authError)
       } catch {
-        reject("SIGNUP_ERROR", "Signup failed: \(error.localizedDescription)", error)
+        reject("SIGNUP_ERROR", error.localizedDescription, error)
       }
     }
   }
