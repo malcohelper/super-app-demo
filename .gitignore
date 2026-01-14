@@ -74,37 +74,9 @@ yarn-error.log
 !.yarn/sdks
 !.yarn/versions
 
-# Mini App Example
-UserManagementApp/build/
-UserManagementApp/.idea
-UserManagementApp/.gradle
-UserManagementApp/local.properties
-UserManagementApp/*.iml
-UserManagementApp/*.hprof
-UserManagementApp/.cxx/
-UserManagementApp/*.keystore
-UserManagementApp/.kotlin/
-UserManagementApp/.bundle
-UserManagementApp/node_modules
-UserManagementApp/build/
-UserManagementApp/*.pbxuser
-!UserManagementApp/default.pbxuser
-UserManagementApp/*.mode1v3
-!UserManagementApp/default.mode1v3
-UserManagementApp/*.mode2v3
-!UserManagementApp/default.mode2v3
-UserManagementApp/*.perspectivev3
-!UserManagementApp/default.perspectivev3
-UserManagementApp/xcuserdata
-UserManagementApp/*.xccheckout
-UserManagementApp/*.moved-aside
-UserManagementApp/DerivedData
-UserManagementApp/*.hmap
-UserManagementApp/*.ipa
-UserManagementApp/*.xcuserstate
-UserManagementApp/.xcode.env.local
 
 # Firebase Configuration
 # Do not commit Firebase config files with real credentials
 ios/HostApp/GoogleService-Info.plist
+ios/GoogleService-Info.plist
 android/app/google-services.json
