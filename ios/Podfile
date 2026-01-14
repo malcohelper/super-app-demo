@@ -23,6 +23,16 @@ target 'HostApp' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+  # Firebase dependencies for Chat functionality
+  pod 'Firebase/Database', '~> 10.20.0', :modular_headers => true
+  pod 'Firebase/Auth', '~> 10.20.0', :modular_headers => true
+  
+  # Firebase transitive dependencies - need modular headers for Swift
+  pod 'FirebaseCore', :modular_headers => true
+  pod 'FirebaseAppCheckInterop', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'leveldb-library', :modular_headers => true
+
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
@@ -31,5 +41,22 @@ target 'HostApp' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+    
+    # Fix for Firebase Swift pods - enable modular headers for dependencies
+    installer.pods_project.targets.each do |target|
+      if ['FirebaseCore', 'FirebaseAppCheckInterop', 'GoogleUtilities', 'leveldb-library'].include?(target.name)
+        target.build_configurations.each do |config|
+          config.build_settings['DEFINES_MODULE'] = 'YES'
+        end
+      end
+      
+      # Fix for leveldb-library build issues
+      if target.name == 'leveldb-library'
+        target.build_configurations.each do |config|
+          config.build_settings['GCC_WARN_INHIBIT_ALL_WARNINGS'] = 'YES'
+          config.build_settings['WARNING_CFLAGS'] = '-Wno-shorten-64-to-32'
+        end
+      end
+    end
   end
 end

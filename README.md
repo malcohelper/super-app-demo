@@ -8,6 +8,7 @@
 - [Getting Started](#getting-started)
 - [Development Workflow](#development-workflow)
 - [Host SDK](#host-sdk)
+- [Chat Module](#chat-module)
 - [Module Federation](#module-federation)
 - [Deployment](#deployment)
 
@@ -323,6 +324,99 @@ export default function MiniApp(props: MiniAppProps) {
   return <View>...</View>;
 }
 ```
+
+---
+
+## 💬 Chat Module
+
+The Chat module is a **Native Module** built into HostApp that provides real-time chat functionality to all mini-apps using Firebase Realtime Database.
+
+### Architecture
+
+```
+┌──────────────────────────┐
+│      Mini Apps           │
+│  (AppChat, etc.)         │
+└───────────▲──────────────┘
+            │ Chat JS SDK
+┌───────────┴──────────────┐
+│       HostApp            │
+│  ┌────────────────────┐  │
+│  │  Chat JS SDK       │  │
+│  └─────────▲──────────┘  │
+│            │ JS Bridge    │
+│  ┌─────────┴──────────┐  │
+│  │ Native Chat Module │  │
+│  │  (Swift)           │  │
+│  └─────────▲──────────┘  │
+│            │              │
+│     Firebase Realtime     │
+└──────────────────────────┘
+```
+
+### Features
+
+- ✅ **Offline-first**: Messages queued locally when offline
+- ✅ **Real-time sync**: Instant message delivery via Firebase
+- ✅ **Idempotent**: Client-generated message IDs prevent duplicates
+- ✅ **Retry logic**: Exponential backoff for failed messages
+- ✅ **Event-driven**: message_added, message_ack, message_failed events
+- ✅ **Type-safe**: Full TypeScript support
+
+### Quick Start
+
+**1. Setup Firebase** (see [CHAT_BUILD_SETUP.md](./CHAT_BUILD_SETUP.md))
+
+**2. Initialize Chat in Mini App:**
+
+```typescript
+import { chat } from '../host-sdk/chat';
+
+await chat.init({
+  userId: 'user123',
+  displayName: 'John Doe',
+  photoURL: 'https://example.com/avatar.jpg'
+});
+```
+
+**3. Send Messages:**
+
+```typescript
+const message = await chat.sendMessage('room123', {
+  text: 'Hello, world!',
+  type: 'text'
+});
+```
+
+**4. Subscribe to Room Events:**
+
+```typescript
+const unsubscribe = chat.subscribeRoom('room123', (event) => {
+  switch (event.type) {
+    case 'message_added':
+      console.log('New message:', event.message);
+      break;
+    case 'message_ack':
+      console.log('Message sent:', event.messageId);
+      break;
+    case 'message_failed':
+      console.log('Send failed:', event.reason);
+      break;
+  }
+});
+
+// Cleanup
+unsubscribe();
+```
+
+### Documentation
+
+- **Setup Guide**: [CHAT_BUILD_SETUP.md](./CHAT_BUILD_SETUP.md)
+- **API Reference**: [CHAT_API.md](./CHAT_API.md)
+- **Architecture**: [super_app_chat_architecture.md](./super_app_chat_architecture.md)
+- **Offline Queue**: [chat_offline_queue_delivery_semantics_extension.md](./chat_offline_queue_delivery_semantics_extension.md)
+
+
 
 ---
 

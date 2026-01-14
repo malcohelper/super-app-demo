@@ -103,3 +103,8 @@ UserManagementApp/*.hmap
 UserManagementApp/*.ipa
 UserManagementApp/*.xcuserstate
 UserManagementApp/.xcode.env.local
+
+# Firebase Configuration
+# Do not commit Firebase config files with real credentials
+ios/HostApp/GoogleService-Info.plist
+android/app/google-services.json
