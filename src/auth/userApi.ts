@@ -1,4 +1,4 @@
-import { showErrorToast } from "./authApi";
+import Toast from "react-native-toast-message";
 
 /**
  * User Profile API Service
@@ -6,6 +6,19 @@ import { showErrorToast } from "./authApi";
  */
 
 const API_BASE_URL = "https://super-app-case.web.app/api";
+
+/**
+ * Show error toast notification
+ */
+const showErrorToast = (message: string) => {
+  Toast.show({
+    type: "error",
+    text1: "Error",
+    text2: message,
+    position: "top",
+    visibilityTime: 4000,
+  });
+};
 
 export interface UserProfile {
   uid: string;

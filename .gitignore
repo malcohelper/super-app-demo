@@ -77,6 +77,5 @@ yarn-error.log
 
 # Firebase Configuration
 # Do not commit Firebase config files with real credentials
-ios/HostApp/GoogleService-Info.plist
-ios/GoogleService-Info.plist
+**/GoogleService-Info.plist
 android/app/google-services.json

@@ -5,9 +5,9 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { NativeAuthModule } from "./NativeAuthModule";
+import { SecureStorage } from "./SecureStorage";
 import { isTokenExpired } from "./tokenUtils";
-import * as authApi from "./authApi";
 import * as userApi from "./userApi";
 
 export interface UserInfo {
@@ -50,123 +50,135 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   // Load saved auth state on mount
   useEffect(() => {
-    loadAuthState();
+    initializeAuth();
   }, []);
 
-  const loadAuthState = async () => {
+  const initializeAuth = async () => {
     try {
-      const [savedToken, savedTimestamp, savedUserInfo] = await Promise.all([
-        AsyncStorage.getItem(STORAGE_KEYS.TOKEN),
-        AsyncStorage.getItem(STORAGE_KEYS.TOKEN_TIMESTAMP),
-        AsyncStorage.getItem(STORAGE_KEYS.USER_INFO),
-      ]);
-
-      if (savedToken && savedTimestamp && savedUserInfo) {
-        const timestamp = parseInt(savedTimestamp, 10);
-
-        // Check if token is expired based on timestamp
-        if (!isTokenExpired(timestamp)) {
-          const parsedUser = JSON.parse(savedUserInfo);
-
-          // Migration: ensure permissions field exists
-          if (!parsedUser.permissions) {
-            parsedUser.permissions = [];
-            // Save the migrated user info
-            await AsyncStorage.setItem(
-              STORAGE_KEYS.USER_INFO,
-              JSON.stringify(parsedUser)
-            );
-          }
-
-          setUserToken(savedToken);
-          setUserInfo(parsedUser);
-          setIsAuthenticated(true);
-        } else {
-          // Token expired, clear storage
-          await clearAuthState();
-        }
-      }
+      console.log('[AuthContext] Initializing authentication...');
+      
+      // Load auth state from Keychain (via native module)
+      await loadAuthState();
     } catch (error) {
-      console.error("Failed to load auth state:", error);
+      console.error('[AuthContext] Failed to initialize auth:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const loadAuthState = async () => {
+    try {
+      // Load from Keychain via native module
+      const authState = await NativeAuthModule.loadAuthState();
+      
+      if (authState?.token && authState?.userInfo && authState?.timestamp) {
+        // Check if token is expired
+        if (!isTokenExpired(authState.timestamp)) {
+          const user = authState.userInfo;
+          
+          // Ensure permissions field exists
+          if (!user.permissions) {
+            user.permissions = [];
+          }
+          
+          setUserToken(authState.token);
+          setUserInfo(user);
+          setIsAuthenticated(true);
+          
+          console.log('[AuthContext] ✓ Loaded auth state from Keychain');
+        } else {
+          // Token expired, clear storage
+          console.log('[AuthContext] Token expired, clearing auth state');
+          await clearAuthState();
+        }
+      } else {
+        console.log('[AuthContext] No auth state found');
+      }
+    } catch (error) {
+      console.error('[AuthContext] Failed to load auth state:', error);
+    }
+  };
+
   const saveAuthState = async (token: string, user: UserInfo) => {
     try {
-      const timestamp = Date.now().toString();
-      await Promise.all([
-        AsyncStorage.setItem(STORAGE_KEYS.TOKEN, token),
-        AsyncStorage.setItem(STORAGE_KEYS.TOKEN_TIMESTAMP, timestamp),
-        AsyncStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user)),
-      ]);
+      await SecureStorage.saveAuthState(token, user);
+      console.log('[AuthContext] ✓ Saved auth state to Keychain');
     } catch (error) {
-      console.error("Failed to save auth state:", error);
+      console.error('[AuthContext] Failed to save auth state:', error);
     }
   };
 
   const clearAuthState = async () => {
     try {
-      await Promise.all([
-        AsyncStorage.removeItem(STORAGE_KEYS.TOKEN),
-        AsyncStorage.removeItem(STORAGE_KEYS.TOKEN_TIMESTAMP),
-        AsyncStorage.removeItem(STORAGE_KEYS.USER_INFO),
-      ]);
+      await SecureStorage.clear();
+      console.log('[AuthContext] ✓ Cleared auth state');
     } catch (error) {
-      console.error("Failed to clear auth state:", error);
+      console.error('[AuthContext] Failed to clear auth state:', error);
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await authApi.login(email, password);
-
-      const user: UserInfo = {
-        uid: response.uid,
-        email: response.email,
-        displayName: response.displayName,
-        role: response.role,
-        permissions: response.permissions ?? [],
-      };
-
-      await saveAuthState(response.token, user);
-      setUserToken(response.token);
+      console.log('[AuthContext] Logging in via native module...');
+      
+      // Call native login - it handles API call and Keychain storage
+      const user = await NativeAuthModule.login(email, password);
+      
+      // Get token from Keychain
+      const token = await SecureStorage.getToken();
+      
+      setUserToken(token);
       setUserInfo(user);
       setIsAuthenticated(true);
+      
+      console.log('[AuthContext] ✓ Login successful');
     } catch (error) {
-      console.error("[AuthContext] Login failed:", error);
+      console.error('[AuthContext] Login failed:', error);
       throw error;
     }
   };
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      const response = await authApi.signup(email, password, name);
-
-      const user: UserInfo = {
-        uid: response.uid,
-        email: response.email,
-        displayName: response.displayName,
-        role: response.role,
-        permissions: response.permissions || [],
-      };
-
-      await saveAuthState(response.token, user);
-      setUserToken(response.token);
+      console.log('[AuthContext] Signing up via native module...');
+      
+      // Call native signup - it handles API call and Keychain storage
+      const user = await NativeAuthModule.signup(email, password, name);
+      
+      // Get token from Keychain
+      const token = await SecureStorage.getToken();
+      
+      setUserToken(token);
       setUserInfo(user);
       setIsAuthenticated(true);
+      
+      console.log('[AuthContext] ✓ Signup successful');
     } catch (error) {
-      console.error("[AuthContext] Register failed:", error);
+      console.error('[AuthContext] Register failed:', error);
       throw error;
     }
   };
 
   const logout = async () => {
-    await clearAuthState();
-    setUserToken(null);
-    setUserInfo(null);
-    setIsAuthenticated(false);
+    try {
+      console.log('[AuthContext] Logging out via native module...');
+      
+      // Call native logout - it clears Keychain
+      await NativeAuthModule.logout();
+      
+      setUserToken(null);
+      setUserInfo(null);
+      setIsAuthenticated(false);
+      
+      console.log('[AuthContext] ✓ Logout successful');
+    } catch (error) {
+      console.error('[AuthContext] Logout failed:', error);
+      // Still clear local state even if native logout fails
+      await clearAuthState();
+      setUserToken(null);
+      setUserInfo(null);
+      setIsAuthenticated(false);
+    }
   };
 
   const fetchProfile = async () => {
@@ -186,7 +198,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       };
 
       setUserInfo(user);
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
+      await SecureStorage.saveUserInfo(user);
     } catch (error) {
       console.error("[AuthContext] Fetch profile failed:", error);
       throw error;
@@ -214,7 +226,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       };
 
       setUserInfo(user);
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(user));
+      await SecureStorage.saveUserInfo(user);
     } catch (error) {
       console.error("[AuthContext] Update profile failed:", error);
       throw error;

@@ -2578,9 +2578,10 @@ DEPENDENCIES:
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
-  - Firebase/Auth (~> 10.20.0)
-  - Firebase/Database (~> 10.20.0)
+  - Firebase/Auth
+  - Firebase/Database
   - FirebaseAppCheckInterop
+  - FirebaseAuth
   - FirebaseCore
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
@@ -2930,6 +2931,6 @@ SPEC CHECKSUMS:
   SwiftyRSA: 8c6dd1ea7db1b8dc4fb517a202f88bb1354bc2c6
   Yoga: 728df40394d49f3f471688747cf558158b3a3bd1
 
-PODFILE CHECKSUM: 02c2f49c329a532fe7ece85cf9b0c36aec0c772d
+PODFILE CHECKSUM: 9febda4aa2941983d6b5e9940a4416fbf3286f9c
 
 COCOAPODS: 1.15.2

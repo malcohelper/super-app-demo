@@ -24,8 +24,9 @@ target 'HostApp' do
   )
 
   # Firebase dependencies for Chat functionality
-  pod 'Firebase/Database', '~> 10.20.0', :modular_headers => true
-  pod 'Firebase/Auth', '~> 10.20.0', :modular_headers => true
+  pod 'Firebase/Database', :modular_headers => true
+  pod 'Firebase/Auth', :modular_headers => true
+  pod 'FirebaseAuth', :modular_headers => true
   
   # Firebase transitive dependencies - need modular headers for Swift
   pod 'FirebaseCore', :modular_headers => true

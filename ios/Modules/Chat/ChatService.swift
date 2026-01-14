@@ -24,6 +24,55 @@ struct ChatMessage: Codable {
   let editedAt: Int64?
   let metadata: [String: Any]?
   
+  enum CodingKeys: String, CodingKey {
+    case id, roomId, uid, displayName, photoURL, text, type, timestamp, edited, editedAt, metadata
+  }
+  
+  init(id: String, roomId: String, uid: String, displayName: String, photoURL: String?, text: String, type: String, timestamp: Int64, edited: Bool?, editedAt: Int64?, metadata: [String: Any]?) {
+    self.id = id
+    self.roomId = roomId
+    self.uid = uid
+    self.displayName = displayName
+    self.photoURL = photoURL
+    self.text = text
+    self.type = type
+    self.timestamp = timestamp
+    self.edited = edited
+    self.editedAt = editedAt
+    self.metadata = metadata
+  }
+  
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decode(String.self, forKey: .id)
+    roomId = try container.decode(String.self, forKey: .roomId)
+    uid = try container.decode(String.self, forKey: .uid)
+    displayName = try container.decode(String.self, forKey: .displayName)
+    photoURL = try container.decodeIfPresent(String.self, forKey: .photoURL)
+    text = try container.decode(String.self, forKey: .text)
+    type = try container.decode(String.self, forKey: .type)
+    timestamp = try container.decode(Int64.self, forKey: .timestamp)
+    edited = try container.decodeIfPresent(Bool.self, forKey: .edited)
+    editedAt = try container.decodeIfPresent(Int64.self, forKey: .editedAt)
+    // Skip metadata decoding
+    metadata = nil
+  }
+  
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(id, forKey: .id)
+    try container.encode(roomId, forKey: .roomId)
+    try container.encode(uid, forKey: .uid)
+    try container.encode(displayName, forKey: .displayName)
+    try container.encodeIfPresent(photoURL, forKey: .photoURL)
+    try container.encode(text, forKey: .text)
+    try container.encode(type, forKey: .type)
+    try container.encode(timestamp, forKey: .timestamp)
+    try container.encodeIfPresent(edited, forKey: .edited)
+    try container.encodeIfPresent(editedAt, forKey: .editedAt)
+    // Skip metadata encoding
+  }
+  
   func toDictionary() -> [String: Any] {
     var dict: [String: Any] = [
       "id": id,
